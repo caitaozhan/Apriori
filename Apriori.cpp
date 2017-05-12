@@ -52,30 +52,33 @@ int Apriori::inputTransactions(string fileName)
 	}
 }
 
-void Apriori::countItemInTransactions()
+void Apriori::findFrequentOneItemSets()
 {
+	map<string, int> transactionOneItemCount;              // 原始数据集里面的item统计计数 
 	for (size_t i = 0; i != m_transactions.size(); ++i)
 	{
 		for (size_t j = 0; j != m_transactions[i].size(); ++j)
 		{
-			m_transactionItemCount[m_transactions[i].at(j)]++;                 // 统计原始transaction数据中各个item的出现总数
+			transactionOneItemCount[m_transactions[i].at(j)]++;                 // 统计原始transaction数据中各个item的出现总数
 		}
 	}
+
+	removeUnfrequentCandidates(transactionOneItemCount);
 }
 
-void Apriori::findAllFrequentItems()
+void Apriori::findAllFrequentItemSets()
 {
-	m_frequentKitemCount.clear();
-	m_frequentKitemCount.emplace_back();  // 插入一个空集，为了 k 和 vector 的 index下标一一对应
+	m_frequentKItemSetCount.clear();
+	m_frequentKItemSetCount.emplace_back();  // 插入一个空集，为了 k 和 vector 的 index下标一一对应
 	
 	int k = 1;
-	findFrequentItemsFromCandidate(m_transactionItemCount);  // m_transactionItemCount 就是 candidate 1-item
-	map<string, int> candidateItemCount;
-	while (m_frequentKitemCount[k].size() != 0)  
+	findFrequentOneItemSets();
+	while (m_frequentKItemSetCount[k].size() != 0)  
 	{
 		k++;
-		generateCandidates(candidateItemCount, k);
-		findFrequentItemsFromCandidate(candidateItemCount);
+		vector<string> candidateKItemSets;
+		generateCandidates(candidateKItemSets, k);
+		findFrequentItemsFromCandidate(candidateKItemSets);
 	}
 }
 
@@ -83,39 +86,18 @@ void Apriori::findAllAssociateRules()
 {
 }
 
-/*
-	从candidate item 里面找到频繁的 item，将数据保存在数据成员m_frequentKitemCount里面
 
-    @param itemCount item -> 统计次数
-*/
-void Apriori::findFrequentItemsFromCandidate(const map<string, int>& candidateItemCount)
+void Apriori::generateCandidates(vector<string>& candidateKItemSets, int k)
 {
-	map<string, int> frequentItemCount;
-	map<string, int>::const_iterator iter = candidateItemCount.begin();
-	while (iter != candidateItemCount.end())
-	{
-		if (static_cast<double>(iter->second) / static_cast<double>(m_transactionCounter) > (m_minSupportRatio - 1.0e-8))
-		{
-			frequentItemCount[iter->first] = iter->second;
-		}
-		iter++;
-	}
-	m_frequentKitemCount.emplace_back(frequentItemCount);  // 频繁 k-item 及其统计次数 保存在 m_frequentKitemCount[k] 里面 
-}
-
-void Apriori::generateCandidates(map<string, int>& candidateItemCount, int k)
-{
-	candidateItemCount.clear();
-
-	// Find all pairs of (k-1)-item sets in m_frequentKitemCount[k-1] that only differ in their last item
+	// Find all pairs of (k-1)-item sets in m_frequentKItemSetCount[k-1] that only differ in their last item
 	vector<pair<string, string>> itemPairs;
-	map<string, int>::const_iterator iter1 = m_frequentKitemCount[k - 1].begin();
+	map<string, int>::const_iterator iter1 = m_frequentKItemSetCount[k - 1].begin();
 	map<string, int>::const_iterator iter2;
-	while (iter1 != m_frequentKitemCount[k - 1].end())
+	while (iter1 != m_frequentKItemSetCount[k - 1].end())
 	{
 		iter2 = iter1;
 		iter2++;
-		while (iter2 != m_frequentKitemCount[k - 1].end())  // 由于 m_frequentKitemCount[k-1]是一个map，因此里面的key是排好序的
+		while (iter2 != m_frequentKItemSetCount[k - 1].end())  // 由于 m_frequentKItemSetCount[k-1]是一个map，因此里面的key是排好序的
 		{                                                   // 这两个 iter 操作下来，pair<string, string>里面的两个string也是排好序的：左边的string < 右边的string
 			string items1 = iter1->first;                   // item set 是 string，里面的 item 是一个char，不过也是用string存储的。。。
 			string items2 = iter2->first;
@@ -128,23 +110,22 @@ void Apriori::generateCandidates(map<string, int>& candidateItemCount, int k)
 		iter1++;
 	}
 	
-	// Create a k-item set for each pair by combining the two (k-1)-item sets that are paired
-	vector<string> kItems;
+	// Create candidate k-item set for each pair by combining the two (k-1)-item sets that are paired
 	for (size_t i = 0; i < itemPairs.size(); ++i)
 	{
 		string item1(itemPairs[i].first);
 		string item2(itemPairs[i].second);
 		item1.insert(item1.end(), item2[item2.size() - 1]);
 
-		kItems.emplace_back(item1);
+		candidateKItemSets.emplace_back(item1);
 	}
 
-	// Remove all k-item sets containing any (k-1)-item sets that are not in the m_frequentKitemCount[k - 1]
-	vector<string>::const_iterator iterVec = kItems.begin();
+	// Remove all k-item sets containing any (k-1)-item sets that are not in the m_frequentKItemSetCount[k - 1]
+	vector<string>::const_iterator iterVec = candidateKItemSets.begin();
 	map<string, int>::const_iterator iterMap;
-	while (iterVec != kItems.end())
+	while (iterVec != candidateKItemSets.end())
 	{
-		bool flag = true;           // 一开始假设这个 k-item 的所有 (k-1)-item 子集都是频繁的，即在 m_frequentKitemCount[k - 1] 里面
+		bool flag = true;           // 一开始假设这个 k-item 的所有 (k-1)-item 子集都是频繁的，即在 m_frequentKItemSetCount[k - 1] 里面
 		string item = *iterVec;
 		string itemSubset;
 		for (size_t i = 0; i < item.size(); ++i)
@@ -152,10 +133,10 @@ void Apriori::generateCandidates(map<string, int>& candidateItemCount, int k)
 			itemSubset = item;
 			itemSubset.erase(i, 1);
 
-			iterMap = m_frequentKitemCount[k - 1].find(itemSubset);
-			if (iterMap == m_frequentKitemCount[k - 1].end())
+			iterMap = m_frequentKItemSetCount[k - 1].find(itemSubset);
+			if (iterMap == m_frequentKItemSetCount[k - 1].end())
 			{
-				iterVec = kItems.erase(iterVec);  // 删除：k-item 里面只要存在一个 (k-1)-item 不在 m_frequentKitemCount[k - 1] 里面，就要删去这个 k-item
+				iterVec = candidateKItemSets.erase(iterVec);  // 删除：k-item 里面只要存在一个 (k-1)-item 不在 m_frequentKItemSetCount[k - 1] 里面，就要删去这个 k-item
 				flag = false;
 				break;
 			}
@@ -164,11 +145,21 @@ void Apriori::generateCandidates(map<string, int>& candidateItemCount, int k)
 		if(flag == true)
 			iterVec++;
 	}
+}
+
+/*
+    从candidate item 里面找到频繁的 item，将数据保存在数据成员m_frequentKItemSetCount里面
+
+    @param itemCount item -> 统计次数
+*/
+void Apriori::findFrequentItemsFromCandidate(const vector<string>& candidateKItemSets)
+{
+	map<string, int> candidateKItemSetCount;
 
 	// 对新产生的 kItems 进行计数统计，生成 candidateItemCount（改变这个函数传进来的引用参数）
-	for (size_t i = 0; i < kItems.size(); ++i)
+	for (size_t i = 0; i < candidateKItemSets.size(); ++i)
 	{
-		string kItem = kItems[i];
+		string kItem = candidateKItemSets[i];
 		int itemCounter = 0;
 		for (size_t j = 0; j < m_transactions.size(); ++j)  // kItems[i]里面的item是排好序的，m_transactions[j]里面的item也是排好序的
 		{
@@ -189,7 +180,7 @@ void Apriori::generateCandidates(map<string, int>& candidateItemCount, int k)
 					transactionIndex++;
 				}
 			}
-			if (transactionIndex < oneTransaction.size())  
+			if (transactionIndex < oneTransaction.size())
 			{
 				itemCounter++;                // 如果 kItem 遍历完成了，oneTransaction还没有遍历完成，kItem在oneTransaction里面，于是 itemCounter 加一
 			}
@@ -198,9 +189,27 @@ void Apriori::generateCandidates(map<string, int>& candidateItemCount, int k)
 				itemCounter++;
 			}
 		}
-		candidateItemCount.emplace(kItem, itemCounter);
+		candidateKItemSetCount.emplace(kItem, itemCounter);
 	}
+
+	removeUnfrequentCandidates(candidateKItemSetCount);
 }
+
+void Apriori::removeUnfrequentCandidates(map<string, int>& candidateKItemSetCount)
+{
+	map<string, int> frequentItemCount;
+	map<string, int>::const_iterator iter = candidateKItemSetCount.begin();
+	while (iter != candidateKItemSetCount.end())
+	{
+		if (static_cast<double>(iter->second) / static_cast<double>(m_transactionCounter) > (m_minSupportRatio - 1.0e-8))
+		{
+			frequentItemCount.emplace(iter->first, iter->second);
+		}
+		iter++;
+	}
+	m_frequentKItemSetCount.emplace_back(frequentItemCount);  // 频繁 k-item 及其统计次数 保存在 m_frequentKItemSetCount[k] 里面 
+}
+
 
 /*
 	Figure out whether two items only differ in their last item

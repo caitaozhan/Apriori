@@ -13,8 +13,7 @@ int main()
 {
 	Apriori apriori(0.5, 0.75);
 	apriori.inputTransactions("transactionData.txt");
-	apriori.countItemInTransactions();
-	apriori.findAllFrequentItems();
+	apriori.findAllFrequentItemSets();
 	apriori.findAllAssociateRules();
 
 
