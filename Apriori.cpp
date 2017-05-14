@@ -16,21 +16,19 @@ Apriori::Apriori(double minSupportRatio, double minConfidence)
 
 /*
 	@param fileName:待输入的原始数据的文件名
-	@return 0 则读入文件成功
 */
-int Apriori::inputTransactions(string fileName)
+void Apriori::inputTransactions(const string &fileName)
 {
 	ifstream inFile(fileName);
 	if (!inFile)
 	{
 		cout << "File to open data file!" << endl;
-		return 1;
 	}
 	else
 	{
 		vector<string> transaction;          // 一个transaction里面有若干items
 		string temp;
-		int begin, end;
+		size_t begin, end;
 		while (getline(inFile, temp))        // 一个transaction可以是这样子的："A C D F G "
 		{
 			m_transactionCounter++;
@@ -48,18 +46,18 @@ int Apriori::inputTransactions(string fileName)
 			m_transactions.emplace_back(transaction);
 			transaction.clear();
 		}
-		return 0;
 	}
+	inFile.close();
 }
 
 void Apriori::findFrequentOneItemSets()
 {
-	map<string, int> transactionOneItemCount;              // 原始数据集里面的item统计计数 
+	map<string, int> transactionOneItemCount;                        // 原始数据集里面的item统计计数 
 	for (size_t i = 0; i != m_transactions.size(); ++i)
 	{
 		for (size_t j = 0; j != m_transactions[i].size(); ++j)
 		{
-			transactionOneItemCount[m_transactions[i].at(j)]++;                 // 统计原始transaction数据中各个item的出现总数
+			transactionOneItemCount[m_transactions[i].at(j)]++;      // 统计原始transaction数据中各个item的出现总数
 		}
 	}
 	removeUnfrequentCandidates(transactionOneItemCount);
@@ -115,18 +113,68 @@ void Apriori::findStrongestAssociateRules()
 	map<string, int>::const_iterator iterRepre = m_representativeItemSetCount.begin();
 	while (iterRepre != m_representativeItemSetCount.end())
 	{
-		string left, right;                 // left-hand-side is the antecedent, right-hand-side is the consequent
 		string leftSet = iterRepre->first;  // 能够出现在左手边的item，初始是所有的items
-		int    support = iterRepre->second;
-		int    leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
+		size_t leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
 
 		while (leftNum < leftSet.size())
 		{
-
-
+			map<pair<string, string>, double> newRules;
+			vector<string> allLeft;
+			vector<string> leftInNewRules;
+			findSubSet(leftSet, leftSet.size(), leftNum, allLeft);
+			for (size_t i = 0; i < allLeft.size(); ++i)
+			{
+				string left = allLeft[i];                                  // left-hand-side is the antecedent
+				map<string, int>::const_iterator iter = m_frequentKItemSetCount[left.size()].find(left);
+				int support = iter->second;
+				double confidence = static_cast<double>(iterRepre->second) / static_cast<double>(support);  // 新rule的置信度，又称准确度accuracy
+				if (confidence > (m_minConfidence - 1.0e-7))
+				{
+					leftInNewRules.emplace_back(left);
+					string right = complementSet(iterRepre->first, left);  // right-hand-side is the consequent
+					newRules.emplace(make_pair(left, right), confidence);
+				}
+			}
+			if (newRules.size() > 0)
+			{
+				map<pair<string, string>, double>::const_iterator iter = newRules.begin();
+				while (iter != newRules.end())
+				{
+					m_associationRule.insert(*iter);
+					iter++;
+				}
+				for (size_t i = 0; i < leftInNewRules.size(); ++i)
+				{
+					string left = leftInNewRules[i];
+					for (size_t j = 0; j < left.size(); ++j)
+					{
+						char ch = left.at(j);
+						size_t found = leftSet.find(ch);
+						if (found != string::npos)
+						{
+							leftSet.erase(found, 1);
+						}
+					}
+				}
+			}
 			leftNum++;
 		}
+		iterRepre++;
 	}
+}
+
+void Apriori::printRules(const string &fileName)
+{
+	ofstream outFile(fileName);
+	cout << "There are " << m_associationRule.size() << " rules" << endl;
+	map<pair<string, string>, double>::const_iterator iter = m_associationRule.begin();
+	while (iter != m_associationRule.end())
+	{
+		outFile << iter->first.first << " --> " << iter->first.second << ", condidence: " << iter->second << endl;
+		cout << iter->first.first << " --> " << iter->first.second << ", condidence: " << iter->second << endl;
+		iter++;
+	}
+	outFile.close();
 }
 
 void Apriori::generateCandidates(vector<string>& candidateKItemSets, int k)
@@ -284,7 +332,7 @@ pair<string, int> Apriori::findRepresentativeSuperSetCount(const pair<string, in
 		string subSet = representativeKItemSet.first;
 		string superSet = iter->first;
 
-		int subIndex = 0, superIndex = 0;
+		size_t subIndex = 0, superIndex = 0;
 		while (subIndex < subSet.size() && superIndex < superSet.size())
 		{
 			if (subSet.substr(subIndex, 1) == superSet.substr(superIndex, 1))
@@ -329,7 +377,7 @@ pair<string, int> Apriori::findRepresentativeSuperSetCount(const pair<string, in
 	findSubSet("ACDF", 4, 2, subset);
 	得到的结果：subset={DF, CF, AF, CD, AD, AC}
 */
-void Apriori::findSubSet(string str, int level, int prune, vector<string>& subSet)
+void Apriori::findSubSet(string str, unsigned int level, unsigned int prune, vector<string>& subSet)
 {
 	if (str.length() - level > prune)      // 剩余的节点肯定没有希望，剪枝
 		return;
@@ -347,4 +395,34 @@ void Apriori::findSubSet(string str, int level, int prune, vector<string>& subSe
 			findSubSet(str, level - 1, prune, subSet);
 		}
 	}
+}
+
+/*
+    求一个集合的互补集合,要求集合里面的元素是排好序的，从小到大
+	比如：
+	fullSet = {ACDF}, left = {AC}
+	则返回的 right = {DF}
+*/
+string Apriori::complementSet(const string & fullSet, const string & left)
+{
+	string right;
+	size_t i = 0, j = 0;
+	while(i < fullSet.size() && j < left.size())
+	{
+		if (fullSet[i] == left[j])
+		{
+			i++, j++;
+		}
+		else if (fullSet[i] != left[j])
+		{
+			right.push_back(fullSet[i]);
+			i++;
+		}
+	}
+	if (i < fullSet.size())
+	{
+		right.append(fullSet.substr(i));
+	}
+
+	return right;
 }
