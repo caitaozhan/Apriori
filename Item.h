@@ -13,21 +13,30 @@ class Item
 {
 public:
 	Item();
+	Item(string itemStr);
 	Item(int x, int y);
 
 	string toString();
 
-	bool operator<(const Item & point) const
+	bool operator<(const Item & item) const
 	{
-		if (m_x < point.m_x)
+		if (m_x < item.m_x)
 		{
 			return true;
 		}
-		else if (m_x == point.m_x)
+		else if (m_x == item.m_x)
 		{
-			return m_y < point.m_y;
+			return m_y < item.m_y;
 		}
 		return false;
+	}
+
+	bool operator==(const Item & item) const
+	{
+		if (m_x == item.m_x && m_y == item.m_y)
+			return true;
+		else
+			return false;
 	}
 
 private:
