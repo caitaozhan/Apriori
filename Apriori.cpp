@@ -62,7 +62,6 @@ void Apriori::findFrequentOneItemSets()
 			transactionOneItemCount[m_transactions[i].at(j)]++;                 // 统计原始transaction数据中各个item的出现总数
 		}
 	}
-
 	removeUnfrequentCandidates(transactionOneItemCount);
 }
 
@@ -82,10 +81,53 @@ void Apriori::findAllFrequentItemSets()
 	}
 }
 
-void Apriori::findAllAssociateRules()
+/*
+    Idealy, rules are as shortest as possible one the left-hand-side, and as long as possible on the right-hand-side.
+	For example, rule A-->CDF is stronger than AC-->DF. If the former rule is right, then the latter rule must be right,
+	because P(AC) <= P(A) and P(ACDF)/P(AC) >= P(ACDF)/P(A) >= minimum accuracy
+	Also, rule A-->CDF is stronger than rule A-->CD
+*/
+void Apriori::findStrongestAssociateRules()
 {
-}
+	// Find the representative K-item sets and their counts
+	for (size_t i = m_frequentKItemSetCount.size() - 2; i > 1; --i)  // [0] 和 [size()-1] 是空元素，[1] 是 one-item set 不能形成rule
+	{
+		map<string, int>::const_iterator iter = m_frequentKItemSetCount[i].begin();
+		while (iter != m_frequentKItemSetCount[i].end())
+		{
+			pair<string, int> superSet = findRepresentativeSuperSetCount(*iter);
+			if (superSet.second == 0)                                // 没有找到 super set
+			{
+				m_representativeItemSetCount.insert(*iter);
+			}
+			else
+			{
+				if (iter->second > superSet.second)
+				{
+					m_representativeItemSetCount.insert(*iter);      // 找到了 super set，而且 support 比 super set 的高
+				}
+			}
+			iter++;
+		}
+	}
+	
+	// Generate rules from the representative item sets，一个规则，左边的item数量越少，则这个规则越“强大”，我们只需要产生那一些强大的规则就行了
+	map<string, int>::const_iterator iterRepre = m_representativeItemSetCount.begin();
+	while (iterRepre != m_representativeItemSetCount.end())
+	{
+		string left, right;                 // left-hand-side is the antecedent, right-hand-side is the consequent
+		string leftSet = iterRepre->first;  // 能够出现在左手边的item，初始是所有的items
+		int    support = iterRepre->second;
+		int    leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
 
+		while (leftNum < leftSet.size())
+		{
+
+
+			leftNum++;
+		}
+	}
+}
 
 void Apriori::generateCandidates(vector<string>& candidateKItemSets, int k)
 {
@@ -98,8 +140,8 @@ void Apriori::generateCandidates(vector<string>& candidateKItemSets, int k)
 		iter2 = iter1;
 		iter2++;
 		while (iter2 != m_frequentKItemSetCount[k - 1].end())  // 由于 m_frequentKItemSetCount[k-1]是一个map，因此里面的key是排好序的
-		{                                                   // 这两个 iter 操作下来，pair<string, string>里面的两个string也是排好序的：左边的string < 右边的string
-			string items1 = iter1->first;                   // item set 是 string，里面的 item 是一个char，不过也是用string存储的。。。
+		{                                                      // 这两个 iter 操作下来，pair<string, string>里面的两个string也是排好序的：左边的string < 右边的string
+			string items1 = iter1->first;                      // item set 是 string，里面的 item 是一个char，不过也是用string存储的。。。
 			string items2 = iter2->first;
 			if (onlyDifferInLastItem(items1, items2))
 			{
@@ -149,7 +191,6 @@ void Apriori::generateCandidates(vector<string>& candidateKItemSets, int k)
 
 /*
     从candidate item 里面找到频繁的 item，将数据保存在数据成员m_frequentKItemSetCount里面
-
     @param itemCount item -> 统计次数
 */
 void Apriori::findFrequentItemsFromCandidate(const vector<string>& candidateKItemSets)
@@ -180,11 +221,7 @@ void Apriori::findFrequentItemsFromCandidate(const vector<string>& candidateKIte
 					transactionIndex++;
 				}
 			}
-			if (transactionIndex < oneTransaction.size())
-			{
-				itemCounter++;                // 如果 kItem 遍历完成了，oneTransaction还没有遍历完成，kItem在oneTransaction里面，于是 itemCounter 加一
-			}
-			else if (transactionIndex == oneTransaction.size() && itemIndex == kItem.size())
+			if (itemIndex == kItem.size())  // kItem遍历完成了，说明kItem里面的元素都找到了
 			{
 				itemCounter++;
 			}
@@ -233,3 +270,81 @@ bool Apriori::onlyDifferInLastItem(const string& items1, const string& items2)
 	return false;
 }
 
+/*
+	find and return the representative super set of @param representativeKItemSet from m_representativeKItemSetCount
+	if not find, return pair("null", 0);
+*/
+pair<string, int> Apriori::findRepresentativeSuperSetCount(const pair<string, int>& representativeKItemSet)
+{
+	map<string, int> someRepresentativeSuperSets;
+
+	map<string, int>::const_iterator iter = m_representativeItemSetCount.begin();
+	while (iter != m_representativeItemSetCount.end())
+	{
+		string subSet = representativeKItemSet.first;
+		string superSet = iter->first;
+
+		int subIndex = 0, superIndex = 0;
+		while (subIndex < subSet.size() && superIndex < superSet.size())
+		{
+			if (subSet.substr(subIndex, 1) == superSet.substr(superIndex, 1))
+			{
+				subIndex++;
+				superIndex++;
+			}
+			else
+			{
+				superIndex++;
+			}
+		}
+		if (subIndex == subSet.size())
+		{
+			someRepresentativeSuperSets.emplace(iter->first, iter->second);   // 可能有多个超集
+		}
+		iter++;
+	}
+
+	// 从多个超集里面选取support最大的一个
+	pair<string, int> superSetCount = pair<string, int>("null", 0);
+	int maxSupport = 0;
+	iter = someRepresentativeSuperSets.begin();
+	while (iter != someRepresentativeSuperSets.end())
+	{
+		if (iter->second > maxSupport)
+		{
+			superSetCount = *iter;
+			maxSupport = iter->second;
+		}
+		iter++;
+	}
+	return superSetCount;
+}
+
+/*
+    level 是搜索树的深度，初始化是最开始输入的原始 string 的长度
+    当搜索深度达到 prune（找到了长度为 prune 的 substr）的时候，就剪枝
+    subSet 保存找到的子集的结果
+	比如：
+	vector<string> subset;
+	findSubSet("ACDF", 4, 2, subset);
+	得到的结果：subset={DF, CF, AF, CD, AD, AC}
+*/
+void Apriori::findSubSet(string str, int level, int prune, vector<string>& subSet)
+{
+	if (str.length() - level > prune)      // 剩余的节点肯定没有希望，剪枝
+		return;
+
+	if (str.length() == prune)             // 找到目标，剩余的剪枝
+	{
+		subSet.emplace_back(str);
+	}
+	else
+	{
+		findSubSet(str, level - 1, prune, subSet);
+		if (level > 0)
+		{
+			str.erase(level - 1, 1);
+			findSubSet(str, level - 1, prune, subSet);
+		}
+	}
+}

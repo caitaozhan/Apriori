@@ -14,7 +14,7 @@ int main()
 	Apriori apriori(0.5, 0.75);
 	apriori.inputTransactions("transactionData.txt");
 	apriori.findAllFrequentItemSets();
-	apriori.findAllAssociateRules();
+	apriori.findStrongestAssociateRules();
 
 
 
