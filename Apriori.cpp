@@ -148,8 +148,8 @@ void Apriori::findStrongestAssociateRules()
 					string left = leftInNewRules[i];
 					for (size_t j = 0; j < left.size(); ++j)
 					{
-						char ch = left.at(j);
-						size_t found = leftSet.find(ch);
+						string item = left.substr(j, 1);
+						size_t found = leftSet.find(item);
 						if (found != string::npos)
 						{
 							leftSet.erase(found, 1);
@@ -189,7 +189,7 @@ void Apriori::generateCandidates(vector<string>& candidateKItemSets, int k)
 		iter2++;
 		while (iter2 != m_frequentKItemSetCount[k - 1].end())  // 由于 m_frequentKItemSetCount[k-1]是一个map，因此里面的key是排好序的
 		{                                                      // 这两个 iter 操作下来，pair<string, string>里面的两个string也是排好序的：左边的string < 右边的string
-			string items1 = iter1->first;                      // item set 是 string，里面的 item 是一个char，不过也是用string存储的。。。
+			string items1 = iter1->first;                      // item set 是 string，里面的 item 是一个 char，也就是length=1的string，因此不用char来存储char，而是用string
 			string items2 = iter2->first;
 			if (onlyDifferInLastItem(items1, items2))
 			{
@@ -298,7 +298,7 @@ void Apriori::removeUnfrequentCandidates(map<string, int>& candidateKItemSetCoun
 
 /*
 	Figure out whether two items only differ in their last item
-	这里的一个 item 就是一个 char，items 就是一个 string
+	这里的一个 item 就是一个 char（length=1的string），items 就是一个 string
 */
 bool Apriori::onlyDifferInLastItem(const string& items1, const string& items2)
 {

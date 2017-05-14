@@ -1,0 +1,11 @@
+A --> CDF, condidence: 0.75
+A --> DF, condidence: 1
+C --> D, condidence: 1
+C --> DF, condidence: 0.8
+CF --> AD, condidence: 0.75
+D --> C, condidence: 0.833333
+D --> F, condidence: 0.833333
+E --> CD, condidence: 1
+F --> AD, condidence: 0.8
+F --> CD, condidence: 0.8
+F --> D, condidence: 1
