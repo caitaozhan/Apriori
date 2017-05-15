@@ -5,7 +5,6 @@
 #include <map>
 #include <string>
 #include <algorithm>
-#include "Item.h"
 #include "ItemSet.h"
 using namespace std;
 
@@ -26,7 +25,7 @@ public:
 public:
 	void inputTransactions(const string &fileName);     // 读入数据到m_transactions中
 	void findAllFrequentItemSets();              // 找到所有的频繁项     
-	//void findStrongestAssociateRules();          // 找到所有的关联规则
+	void findStrongestAssociateRules();          // 找到所有的关联规则
 	//void printRules(const string &fileName);
 
 private:
@@ -35,7 +34,7 @@ private:
 	void findFrequentItemsFromCandidate(const vector<ItemSet>& candidateKItemSets); // A frequent item is a item with sufficient coverage(support)
 	void removeUnfrequentCandidates(map<ItemSet, int>& candidateKItemSetCount);
 	bool onlyDifferInLastItem(const ItemSet& items1, const ItemSet& items2);
-	//pair<string, int> findRepresentativeSuperSetCount(const pair<string, int> & representativeKItemSet);
+	pair<ItemSet, int> findRepresentativeSuperSetCount(const pair<ItemSet, int> & representativeKItemSet);
 	//void findSubSet(string str, unsigned int level, unsigned int prune, vector<string>& subSet);
 	//string complementSet(const string & fullSet, const string & left);
 

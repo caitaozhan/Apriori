@@ -102,7 +102,7 @@ void Apriori::findStrongestAssociateRules()
 		map<ItemSet, int>::const_iterator iter = m_frequentKItemSetCount[i].begin();
 		while (iter != m_frequentKItemSetCount[i].end())
 		{
-			pair<string, int> superSet = findRepresentativeSuperSetCount(*iter);
+			pair<ItemSet, int> superSet = findRepresentativeSuperSetCount(*iter);
 			if (superSet.second == 0)                                // 没有找到 super set
 			{
 				m_representativeItemSetCount.insert(*iter);
@@ -118,58 +118,59 @@ void Apriori::findStrongestAssociateRules()
 		}
 	}
 	
-	// Generate rules from the representative item sets，一个规则，左边的item数量越少，则这个规则越“强大”，我们只需要产生那一些强大的规则就行了
-	map<string, int>::const_iterator iterRepre = m_representativeItemSetCount.begin();
-	while (iterRepre != m_representativeItemSetCount.end())
-	{
-		string leftSet = iterRepre->first;  // 能够出现在左手边的item，初始是所有的items
-		size_t leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
 
-		while (leftNum < leftSet.size())
-		{
-			map<pair<string, string>, double> newRules;
-			vector<string> allLeft;
-			vector<string> leftInNewRules;
-			findSubSet(leftSet, leftSet.size(), leftNum, allLeft);
-			for (size_t i = 0; i < allLeft.size(); ++i)
-			{
-				string left = allLeft[i];                                  // left-hand-side is the antecedent
-				map<string, int>::const_iterator iter = m_frequentKItemSetCount[left.size()].find(left);
-				int support = iter->second;
-				double confidence = static_cast<double>(iterRepre->second) / static_cast<double>(support);  // 新rule的置信度，又称准确度accuracy
-				if (confidence > (m_minConfidence - 1.0e-7))
-				{
-					leftInNewRules.emplace_back(left);
-					string right = complementSet(iterRepre->first, left);  // right-hand-side is the consequent
-					newRules.emplace(make_pair(left, right), confidence);
-				}
-			}
-			if (newRules.size() > 0)
-			{
-				map<pair<string, string>, double>::const_iterator iter = newRules.begin();
-				while (iter != newRules.end())
-				{
-					m_associationRule.insert(*iter);
-					iter++;
-				}
-				for (size_t i = 0; i < leftInNewRules.size(); ++i)
-				{
-					string left = leftInNewRules[i];
-					for (size_t j = 0; j < left.size(); ++j)
-					{
-						char ch = left.at(j);
-						size_t found = leftSet.find(ch);
-						if (found != string::npos)
-						{
-							leftSet.erase(found, 1);
-						}
-					}
-				}
-			}
-			leftNum++;
-		}
-		iterRepre++;
-	}
+	//// Generate rules from the representative item sets，一个规则，左边的item数量越少，则这个规则越“强大”，我们只需要产生那一些强大的规则就行了
+	//map<string, int>::const_iterator iterRepre = m_representativeItemSetCount.begin();
+	//while (iterRepre != m_representativeItemSetCount.end())
+	//{
+	//	string leftSet = iterRepre->first;  // 能够出现在左手边的item，初始是所有的items
+	//	size_t leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
+
+	//	while (leftNum < leftSet.size())
+	//	{
+	//		map<pair<string, string>, double> newRules;
+	//		vector<string> allLeft;
+	//		vector<string> leftInNewRules;
+	//		findSubSet(leftSet, leftSet.size(), leftNum, allLeft);
+	//		for (size_t i = 0; i < allLeft.size(); ++i)
+	//		{
+	//			string left = allLeft[i];                                  // left-hand-side is the antecedent
+	//			map<string, int>::const_iterator iter = m_frequentKItemSetCount[left.size()].find(left);
+	//			int support = iter->second;
+	//			double confidence = static_cast<double>(iterRepre->second) / static_cast<double>(support);  // 新rule的置信度，又称准确度accuracy
+	//			if (confidence > (m_minConfidence - 1.0e-7))
+	//			{
+	//				leftInNewRules.emplace_back(left);
+	//				string right = complementSet(iterRepre->first, left);  // right-hand-side is the consequent
+	//				newRules.emplace(make_pair(left, right), confidence);
+	//			}
+	//		}
+	//		if (newRules.size() > 0)
+	//		{
+	//			map<pair<string, string>, double>::const_iterator iter = newRules.begin();
+	//			while (iter != newRules.end())
+	//			{
+	//				m_associationRule.insert(*iter);
+	//				iter++;
+	//			}
+	//			for (size_t i = 0; i < leftInNewRules.size(); ++i)
+	//			{
+	//				string left = leftInNewRules[i];
+	//				for (size_t j = 0; j < left.size(); ++j)
+	//				{
+	//					char ch = left.at(j);
+	//					size_t found = leftSet.find(ch);
+	//					if (found != string::npos)
+	//					{
+	//						leftSet.erase(found, 1);
+	//					}
+	//				}
+	//			}
+	//		}
+	//		leftNum++;
+	//	}
+	//	iterRepre++;
+	//}
 }
 
 //void Apriori::printRules(const string &fileName)
@@ -335,56 +336,62 @@ bool Apriori::onlyDifferInLastItem(const ItemSet& itemSet1, const ItemSet& itemS
 	return false;
 }
 
-///*
-//	find and return the representative super set of @param representativeKItemSet from m_representativeKItemSetCount
-//	if not find, return pair("null", 0);
-//*/
-//pair<string, int> Apriori::findRepresentativeSuperSetCount(const pair<string, int>& representativeKItemSet)
-//{
-//	map<string, int> someRepresentativeSuperSets;
-//
-//	map<string, int>::const_iterator iter = m_representativeItemSetCount.begin();
-//	while (iter != m_representativeItemSetCount.end())
-//	{
-//		string subSet = representativeKItemSet.first;
-//		string superSet = iter->first;
-//
-//		size_t subIndex = 0, superIndex = 0;
-//		while (subIndex < subSet.size() && superIndex < superSet.size())
-//		{
-//			if (subSet.substr(subIndex, 1) == superSet.substr(superIndex, 1))
-//			{
-//				subIndex++;
-//				superIndex++;
-//			}
-//			else
-//			{
-//				superIndex++;
-//			}
-//		}
-//		if (subIndex == subSet.size())
-//		{
-//			someRepresentativeSuperSets.emplace(iter->first, iter->second);   // 可能有多个超集
-//		}
-//		iter++;
-//	}
-//
-//	// 从多个超集里面选取support最大的一个
-//	pair<string, int> superSetCount = pair<string, int>("null", 0);
-//	int maxSupport = 0;
-//	iter = someRepresentativeSuperSets.begin();
-//	while (iter != someRepresentativeSuperSets.end())
-//	{
-//		if (iter->second > maxSupport)
-//		{
-//			superSetCount = *iter;
-//			maxSupport = iter->second;
-//		}
-//		iter++;
-//	}
-//	return superSetCount;
-//}
-//
+/*
+	Find and return the representative super set of @param representativeKItemSet from m_representativeKItemSetCount
+	if not find, return pair("null", 0);
+*/
+pair<ItemSet, int> Apriori::findRepresentativeSuperSetCount(const pair<ItemSet, int>& representativeKItemSet)
+{
+	map<ItemSet, int> someRepresentativeSuperSets;
+	set<Item> subSet = representativeKItemSet.first.getItemSet();
+	map<ItemSet, int>::const_iterator iter = m_representativeItemSetCount.begin();
+	
+	while (iter != m_representativeItemSetCount.end())
+	{
+		set<Item> superSet = iter->first.getItemSet();
+
+		set<Item>::const_iterator iterSubSet = subSet.begin();
+		set<Item>::const_iterator iterSuperSet = superSet.begin();
+
+		while (iterSubSet != subSet.end() && iterSuperSet != superSet.end())
+		{
+			if (*iterSubSet < *iterSuperSet)
+			{
+				break;
+			}
+			else if (*iterSubSet == *iterSuperSet)
+			{
+				iterSubSet++;
+				iterSuperSet++;
+			}
+			else
+			{
+				iterSuperSet++;
+			}
+		}
+		if (iterSubSet == subSet.end())
+		{
+			someRepresentativeSuperSets.emplace(iter->first, iter->second);   // 可能有多个超集
+		}
+		iter++;
+	}
+
+	// 从多个超集里面选取support最大的一个
+	pair<ItemSet, int> superSetCount = pair<ItemSet, int>(ItemSet(), 0);
+	int maxSupport = 0;
+	iter = someRepresentativeSuperSets.begin();
+	while (iter != someRepresentativeSuperSets.end())
+	{
+		if (iter->second > maxSupport)
+		{
+			superSetCount = *iter;
+			maxSupport = iter->second;
+		}
+		iter++;
+	}
+	return superSetCount;
+}
+
 ///*
 //    level 是搜索树的深度，初始化是最开始输入的原始 string 的长度
 //    当搜索深度达到 prune（找到了长度为 prune 的 substr）的时候，就剪枝
