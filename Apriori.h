@@ -32,7 +32,7 @@ public:
 private:
 	void findFrequentOneItemSets();
 	void generateCandidates(vector<ItemSet>& candidateItemSets, int k);
-	//void findFrequentItemsFromCandidate(const vector<ItemSet>& candidateKItemSets); // A frequent item is a item with sufficient coverage(support)
+	void findFrequentItemsFromCandidate(const vector<ItemSet>& candidateKItemSets); // A frequent item is a item with sufficient coverage(support)
 	void removeUnfrequentCandidates(map<ItemSet, int>& candidateKItemSetCount);
 	bool onlyDifferInLastItem(const ItemSet& items1, const ItemSet& items2);
 	//pair<string, int> findRepresentativeSuperSetCount(const pair<string, int> & representativeKItemSet);

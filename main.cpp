@@ -11,10 +11,10 @@ using namespace std;
 int main()
 {   
 	Apriori apriori(0.5, 0.75);
-	//apriori.inputTransactions("transactionData.txt");
-	//apriori.findAllFrequentItemSets();
+	apriori.inputTransactions("transactionData.txt");
+	apriori.findAllFrequentItemSets();
 	
-	//apriori.findStrongestAssociateRules();
+	apriori.findStrongestAssociateRules();
 	//apriori.printRules("associateRule.txt");
 	
 
@@ -41,7 +41,7 @@ int main()
 
 	//Item item3(string("(10,20)"));
 	
-	string str1("caitao");
+	/*string str1("caitao");
 	string str2("zhan");
 	map<string, int> myMap2;
 	myMap2[str1]++;
@@ -86,7 +86,7 @@ int main()
 
 	myMap[itemSet1]++;
 	myMap[itemSet2]++;
-	myMap[itemSet1]++;
+	myMap[itemSet1]++;*/
 
 	
 

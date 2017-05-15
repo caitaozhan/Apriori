@@ -84,94 +84,94 @@ void Apriori::findAllFrequentItemSets()
 		k++;
 		vector<ItemSet> candidateKItemSets;
 		generateCandidates(candidateKItemSets, k);
-		//findFrequentItemsFromCandidate(candidateKItemSets);
+		findFrequentItemsFromCandidate(candidateKItemSets);
 	}
 }
 
-///*
-//    Idealy, rules are as shortest as possible one the left-hand-side, and as long as possible on the right-hand-side.
-//	For example, rule A-->CDF is stronger than AC-->DF. If the former rule is right, then the latter rule must be right,
-//	because P(AC) <= P(A) and P(ACDF)/P(AC) >= P(ACDF)/P(A) >= minimum accuracy
-//	Also, rule A-->CDF is stronger than rule A-->CD
-//*/
-//void Apriori::findStrongestAssociateRules()
-//{
-//	// Find the representative K-item sets and their counts
-//	for (size_t i = m_frequentKItemSetCount.size() - 2; i > 1; --i)  // [0] 和 [size()-1] 是空元素，[1] 是 one-item set 不能形成rule
-//	{
-//		map<string, int>::const_iterator iter = m_frequentKItemSetCount[i].begin();
-//		while (iter != m_frequentKItemSetCount[i].end())
-//		{
-//			pair<string, int> superSet = findRepresentativeSuperSetCount(*iter);
-//			if (superSet.second == 0)                                // 没有找到 super set
-//			{
-//				m_representativeItemSetCount.insert(*iter);
-//			}
-//			else
-//			{
-//				if (iter->second > superSet.second)
-//				{
-//					m_representativeItemSetCount.insert(*iter);      // 找到了 super set，而且 support 比 super set 的高
-//				}
-//			}
-//			iter++;
-//		}
-//	}
-//	
-//	// Generate rules from the representative item sets，一个规则，左边的item数量越少，则这个规则越“强大”，我们只需要产生那一些强大的规则就行了
-//	map<string, int>::const_iterator iterRepre = m_representativeItemSetCount.begin();
-//	while (iterRepre != m_representativeItemSetCount.end())
-//	{
-//		string leftSet = iterRepre->first;  // 能够出现在左手边的item，初始是所有的items
-//		size_t leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
-//
-//		while (leftNum < leftSet.size())
-//		{
-//			map<pair<string, string>, double> newRules;
-//			vector<string> allLeft;
-//			vector<string> leftInNewRules;
-//			findSubSet(leftSet, leftSet.size(), leftNum, allLeft);
-//			for (size_t i = 0; i < allLeft.size(); ++i)
-//			{
-//				string left = allLeft[i];                                  // left-hand-side is the antecedent
-//				map<string, int>::const_iterator iter = m_frequentKItemSetCount[left.size()].find(left);
-//				int support = iter->second;
-//				double confidence = static_cast<double>(iterRepre->second) / static_cast<double>(support);  // 新rule的置信度，又称准确度accuracy
-//				if (confidence > (m_minConfidence - 1.0e-7))
-//				{
-//					leftInNewRules.emplace_back(left);
-//					string right = complementSet(iterRepre->first, left);  // right-hand-side is the consequent
-//					newRules.emplace(make_pair(left, right), confidence);
-//				}
-//			}
-//			if (newRules.size() > 0)
-//			{
-//				map<pair<string, string>, double>::const_iterator iter = newRules.begin();
-//				while (iter != newRules.end())
-//				{
-//					m_associationRule.insert(*iter);
-//					iter++;
-//				}
-//				for (size_t i = 0; i < leftInNewRules.size(); ++i)
-//				{
-//					string left = leftInNewRules[i];
-//					for (size_t j = 0; j < left.size(); ++j)
-//					{
-//						char ch = left.at(j);
-//						size_t found = leftSet.find(ch);
-//						if (found != string::npos)
-//						{
-//							leftSet.erase(found, 1);
-//						}
-//					}
-//				}
-//			}
-//			leftNum++;
-//		}
-//		iterRepre++;
-//	}
-//}
-//
+/*
+    Idealy, rules are as shortest as possible one the left-hand-side, and as long as possible on the right-hand-side.
+	For example, rule A-->CDF is stronger than AC-->DF. If the former rule is right, then the latter rule must be right,
+	because P(AC) <= P(A) and P(ACDF)/P(AC) >= P(ACDF)/P(A) >= minimum accuracy
+	Also, rule A-->CDF is stronger than rule A-->CD
+*/
+void Apriori::findStrongestAssociateRules()
+{
+	// Find the representative K-item sets and their counts
+	for (size_t i = m_frequentKItemSetCount.size() - 2; i > 1; --i)  // [0] 和 [size()-1] 是空元素，[1] 是 one-item set 不能形成rule
+	{
+		map<ItemSet, int>::const_iterator iter = m_frequentKItemSetCount[i].begin();
+		while (iter != m_frequentKItemSetCount[i].end())
+		{
+			pair<string, int> superSet = findRepresentativeSuperSetCount(*iter);
+			if (superSet.second == 0)                                // 没有找到 super set
+			{
+				m_representativeItemSetCount.insert(*iter);
+			}
+			else
+			{
+				if (iter->second > superSet.second)
+				{
+					m_representativeItemSetCount.insert(*iter);      // 找到了 super set，而且 support 比 super set 的高
+				}
+			}
+			iter++;
+		}
+	}
+	
+	// Generate rules from the representative item sets，一个规则，左边的item数量越少，则这个规则越“强大”，我们只需要产生那一些强大的规则就行了
+	map<string, int>::const_iterator iterRepre = m_representativeItemSetCount.begin();
+	while (iterRepre != m_representativeItemSetCount.end())
+	{
+		string leftSet = iterRepre->first;  // 能够出现在左手边的item，初始是所有的items
+		size_t leftNum = 1;                 // 规则左手边的 item 数量，初始化是左边一个
+
+		while (leftNum < leftSet.size())
+		{
+			map<pair<string, string>, double> newRules;
+			vector<string> allLeft;
+			vector<string> leftInNewRules;
+			findSubSet(leftSet, leftSet.size(), leftNum, allLeft);
+			for (size_t i = 0; i < allLeft.size(); ++i)
+			{
+				string left = allLeft[i];                                  // left-hand-side is the antecedent
+				map<string, int>::const_iterator iter = m_frequentKItemSetCount[left.size()].find(left);
+				int support = iter->second;
+				double confidence = static_cast<double>(iterRepre->second) / static_cast<double>(support);  // 新rule的置信度，又称准确度accuracy
+				if (confidence > (m_minConfidence - 1.0e-7))
+				{
+					leftInNewRules.emplace_back(left);
+					string right = complementSet(iterRepre->first, left);  // right-hand-side is the consequent
+					newRules.emplace(make_pair(left, right), confidence);
+				}
+			}
+			if (newRules.size() > 0)
+			{
+				map<pair<string, string>, double>::const_iterator iter = newRules.begin();
+				while (iter != newRules.end())
+				{
+					m_associationRule.insert(*iter);
+					iter++;
+				}
+				for (size_t i = 0; i < leftInNewRules.size(); ++i)
+				{
+					string left = leftInNewRules[i];
+					for (size_t j = 0; j < left.size(); ++j)
+					{
+						char ch = left.at(j);
+						size_t found = leftSet.find(ch);
+						if (found != string::npos)
+						{
+							leftSet.erase(found, 1);
+						}
+					}
+				}
+			}
+			leftNum++;
+		}
+		iterRepre++;
+	}
+}
+
 //void Apriori::printRules(const string &fileName)
 //{
 //	ofstream outFile(fileName);
@@ -240,78 +240,62 @@ void Apriori::generateCandidates(vector<ItemSet>& candidateKItemSets, int k)
 				flag = false;
 				break;
 			}
-
-			if (flag == true)
-				iterVec++;
-		
+			iterSet++;
 		}
 
-		/*
-		bool flag = true;           // 一开始假设这个 k-item 的所有 (k-1)-item 子集都是频繁的，即在 m_frequentKItemSetCount[k - 1] 里面
-		string item = *iterVec;
-		string itemSubset;
-		for (size_t i = 0; i < item.size(); ++i)
-		{
-			itemSubset = item;
-			itemSubset.erase(i, 1);
-
-			iterMap = m_frequentKItemSetCount[k - 1].find(itemSubset);
-			if (iterMap == m_frequentKItemSetCount[k - 1].end())
-			{
-				iterVec = candidateKItemSets.erase(iterVec);  // 删除：k-item 里面只要存在一个 (k-1)-item 不在 m_frequentKItemSetCount[k - 1] 里面，就要删去这个 k-item
-				flag = false;
-				break;
-			}
-		}
-		
-		if(flag == true)
+		if (flag == true)
 			iterVec++;
-		*/
 	}
 }
 
-///*
-//    从candidate item 里面找到频繁的 item，将数据保存在数据成员m_frequentKItemSetCount里面
-//    @param itemCount item -> 统计次数
-//*/
-//void Apriori::findFrequentItemsFromCandidate(const vector<string>& candidateKItemSets)
-//{
-//	map<string, int> candidateKItemSetCount;
-//
-//	// 对新产生的 kItems 进行计数统计，生成 candidateItemCount（改变这个函数传进来的引用参数）
-//	for (size_t i = 0; i < candidateKItemSets.size(); ++i)
-//	{
-//		string kItem = candidateKItemSets[i];
-//		int itemCounter = 0;
-//		for (size_t j = 0; j < m_transactions.size(); ++j)  // kItems[i]里面的item是排好序的，m_transactions[j]里面的item也是排好序的
-//		{
-//			vector<string> oneTransaction = m_transactions[j];
-//			size_t transactionIndex = 0;
-//			size_t itemIndex = 0;
-//			while (transactionIndex < oneTransaction.size() && itemIndex < kItem.size()) // 类似于 merge sort 的思想
-//			{
-//				string oneItem = kItem.substr(itemIndex, 1);
-//				string transactionItem = oneTransaction[transactionIndex];
-//				if (oneItem == transactionItem)
-//				{
-//					transactionIndex++;
-//					itemIndex++;
-//				}
-//				else
-//				{
-//					transactionIndex++;
-//				}
-//			}
-//			if (itemIndex == kItem.size())  // kItem遍历完成了，说明kItem里面的元素都找到了
-//			{
-//				itemCounter++;
-//			}
-//		}
-//		candidateKItemSetCount.emplace(kItem, itemCounter);
-//	}
-//
-//	removeUnfrequentCandidates(candidateKItemSetCount);
-//}
+/*
+    从candidate item 里面找到频繁的 item，将数据保存在数据成员m_frequentKItemSetCount里面
+    @param itemCount item -> 统计次数
+*/
+void Apriori::findFrequentItemsFromCandidate(const vector<ItemSet>& candidateKItemSets)
+{
+	map<ItemSet, int> candidateKItemSetCount;
+
+	// 对新产生的 kItems 进行计数统计，生成 candidateItemCount（改变这个函数传进来的引用参数）
+	for (size_t i = 0; i < candidateKItemSets.size(); ++i)
+	{
+		ItemSet itemSet = candidateKItemSets[i];
+		set<Item> setItem = itemSet.getItemSet();
+		int itemCounter = 0;
+		for (size_t j = 0; j < m_transactions.size(); ++j)  // kItems[i]里面的item是排好序的，m_transactions[j]里面的item也是排好序的
+		{
+			vector<ItemSet> oneTransaction = m_transactions[j];
+			size_t transactionIndex = 0;
+			set<Item>::const_iterator iterSet = setItem.begin();
+
+			while (transactionIndex < oneTransaction.size() && iterSet != setItem.end())  // 类似于 merge sort 的 merge 思想
+			{
+				ItemSet transactionItem = oneTransaction[transactionIndex];
+				ItemSet oneItem;
+				oneItem.insert(*iterSet);
+				if (oneItem < transactionItem)  // 剪枝，如果candidate item-set当前的item ＜ 当前的transaction里面的item， 后面的更不可能了
+				{
+					break;
+				}
+				else if (oneItem == transactionItem)
+				{
+					transactionIndex++;
+					iterSet++;
+				}
+				else
+				{
+					transactionIndex++;
+				}
+			}
+			if (iterSet == setItem.end())    // itemSet遍历完成了，说明itemSet里面的元素都找到了
+			{
+				itemCounter++;
+			}
+		}
+		candidateKItemSetCount.emplace(itemSet, itemCounter);
+	}
+	removeUnfrequentCandidates(candidateKItemSetCount);
+}
 
 void Apriori::removeUnfrequentCandidates(map<ItemSet, int>& candidateKItemSetCount)
 {
