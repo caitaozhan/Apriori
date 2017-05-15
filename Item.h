@@ -19,6 +19,7 @@ public:
 	string toString();
 
 	bool operator<(const Item & item) const;
+	bool operator>(const Item & item) const;
 	bool operator==(const Item & item) const;
 	bool operator!=(const Item & item) const;
 

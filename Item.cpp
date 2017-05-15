@@ -51,6 +51,19 @@ bool Item::operator<(const Item & item) const
 	return false;
 }
 
+bool Item::operator>(const Item & item) const
+{
+	if (m_x > item.m_x)
+	{
+		return true;
+	}
+	else if (m_x == item.m_x)
+	{
+		return m_y > item.m_y;
+	}
+	return false;
+}
+
 bool Item::operator==(const Item & item) const
 {
 	if (m_x == item.m_x && m_y == item.m_y)

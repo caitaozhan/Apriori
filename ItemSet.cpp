@@ -49,7 +49,28 @@ Item ItemSet::lastItem() const
 
 bool ItemSet::operator==(const ItemSet & itemSet) const
 {
-	return m_itemSet == itemSet.m_itemSet;
+	if (m_itemSet.size() != itemSet.size())   // 如果大小不相等，两个 set 一定不相等
+		return false;
+
+	set<Item>::const_iterator iterThis = m_itemSet.begin();
+	set<Item>::const_iterator iterParam = itemSet.m_itemSet.begin();
+
+	while (iterThis != m_itemSet.end() && iterParam != itemSet.m_itemSet.end())
+	{
+		if (*iterThis != *iterParam)
+			return false;
+
+		iterThis++, iterParam++;
+	}
+	return true;
+}
+
+bool ItemSet::operator!=(const ItemSet & itemSet) const
+{
+	if (*this == itemSet)
+		return false;
+
+	return true;
 }
 
 bool ItemSet::operator<(const ItemSet & itemSet) const
@@ -73,13 +94,44 @@ bool ItemSet::operator<(const ItemSet & itemSet) const
 			return false;
 		}
 	}
-	if (iterThis == m_itemSet.end())
+	if (iterThis == m_itemSet.end() && iterParam != itemSet.m_itemSet.end())
 	{
 		return true;
 	}
 	else
 	{
 		return false;
+	}
+}
+
+bool ItemSet::operator>(const ItemSet & itemSet) const
+{
+	set<Item>::const_iterator iterThis = m_itemSet.begin();
+	set<Item>::const_iterator iterParam = itemSet.m_itemSet.begin();
+
+	while (iterThis != m_itemSet.end() && iterParam != itemSet.m_itemSet.end())
+	{
+		if (*iterThis > *iterParam)
+		{
+			return true;
+		}
+		else if (*iterThis == *iterParam)
+		{
+			iterThis++, iterParam++;
+			continue;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	if (iterThis == m_itemSet.end() && iterParam != itemSet.m_itemSet.end())
+	{
+		return false;
+	}
+	else
+	{
+		return true;
 	}
 }
 

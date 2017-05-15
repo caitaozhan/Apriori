@@ -66,7 +66,7 @@ void Apriori::findFrequentOneItemSets()
 	{
 		for (size_t j = 0; j != m_transactions[i].size(); ++j)
 		{
-			oneItemSetCount[m_transactions[i].at(j)]++;       // 统计原始transaction数据中各个item的出现总数
+			oneItemSetCount[m_transactions[i].at(j)]++;       // 统计原始transaction数据中各个item的出现总数，在 Strict weak orderings 吃了大亏
 		}
 	}
 	removeUnfrequentCandidates(oneItemSetCount);
