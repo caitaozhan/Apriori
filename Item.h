@@ -18,26 +18,9 @@ public:
 
 	string toString();
 
-	bool operator<(const Item & item) const
-	{
-		if (m_x < item.m_x)
-		{
-			return true;
-		}
-		else if (m_x == item.m_x)
-		{
-			return m_y < item.m_y;
-		}
-		return false;
-	}
-
-	bool operator==(const Item & item) const
-	{
-		if (m_x == item.m_x && m_y == item.m_y)
-			return true;
-		else
-			return false;
-	}
+	bool operator<(const Item & item) const;
+	bool operator==(const Item & item) const;
+	bool operator!=(const Item & item) const;
 
 private:
 	int m_x;
