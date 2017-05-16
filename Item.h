@@ -23,6 +23,8 @@ public:
 	bool operator==(const Item & item) const;
 	bool operator!=(const Item & item) const;
 
+	friend ostream& operator<<(ostream & output, const Item & item);
+
 private:
 	int m_x;
 	int m_y;

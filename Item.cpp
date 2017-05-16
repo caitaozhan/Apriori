@@ -80,3 +80,10 @@ bool Item::operator!=(const Item & item) const
 		return false;
 }
 
+ostream & operator<<(ostream & output, const Item & item)
+{
+	output << "(";
+	output << item.m_x << "," << item.m_y;
+	output << ")";
+	return output;
+}
