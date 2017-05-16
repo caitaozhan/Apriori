@@ -166,12 +166,13 @@ void Apriori::findStrongestAssociateRules()
 void Apriori::printRules(const string &fileName)
 {
 	ofstream outFile(fileName);
-	cout << "There are " << m_associationRule.size() << " rules" << endl;
+	outFile << "There are " << m_associationRule.size() << " strongest association rules" << endl;
+	cout << "There are " << m_associationRule.size() << " strongest association rules" << endl;
 	map<pair<string, string>, double>::const_iterator iter = m_associationRule.begin();
 	while (iter != m_associationRule.end())
 	{
-		outFile << iter->first.first << " --> " << iter->first.second << ", condidence: " << iter->second << endl;
-		cout << iter->first.first << " --> " << iter->first.second << ", condidence: " << iter->second << endl;
+		outFile << "Condidence = " << left << setw(5) << setprecision(3) << iter->second << " " << iter->first.first << " --> " << iter->first.second << endl;
+		cout << "Condidence = " << left << setw(5) << setprecision(3) << iter->second << " " << iter->first.first << " --> " << iter->first.second << endl;
 		iter++;
 	}
 	outFile.close();
@@ -259,7 +260,11 @@ void Apriori::findFrequentItemsFromCandidate(const vector<string>& candidateKIte
 			{
 				string oneItem = kItem.substr(itemIndex, 1);
 				string transactionItem = oneTransaction[transactionIndex];
-				if (oneItem == transactionItem)
+				if (oneItem < transactionItem)              // 剪枝，如果candidate item-set当前的item ＜ 当前的transaction里面的item， 后面的更不可能了
+				{
+					break;
+				}
+				else if (oneItem == transactionItem)
 				{
 					transactionIndex++;
 					itemIndex++;
@@ -333,9 +338,13 @@ pair<string, int> Apriori::findRepresentativeSuperSetCount(const pair<string, in
 		string superSet = iter->first;
 
 		size_t subIndex = 0, superIndex = 0;
-		while (subIndex < subSet.size() && superIndex < superSet.size())
+		while (subIndex < subSet.size() && superIndex < superSet.size())      // 借鉴了 merge sort 里面的 merge 部分，注意这里的string内部是排好序的
 		{
-			if (subSet.substr(subIndex, 1) == superSet.substr(superIndex, 1))
+			if (subSet.substr(subIndex, 1) < superSet.substr(superIndex, 1))  // 剪枝
+			{
+				break;
+			}
+			else if (subSet.substr(subIndex, 1) == superSet.substr(superIndex, 1))
 			{
 				subIndex++;
 				superIndex++;

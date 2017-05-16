@@ -1,9 +1,5 @@
 #pragma once
 #include <iostream>
-#include <fstream>
-#include <vector>
-#include <map>
-#include <algorithm>
 #include "Apriori.h"
 
 using namespace std;

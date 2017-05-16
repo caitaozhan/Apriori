@@ -1,11 +1,12 @@
-A --> CDF, condidence: 0.75
-A --> DF, condidence: 1
-C --> D, condidence: 1
-C --> DF, condidence: 0.8
-CF --> AD, condidence: 0.75
-D --> C, condidence: 0.833333
-D --> F, condidence: 0.833333
-E --> CD, condidence: 1
-F --> AD, condidence: 0.8
-F --> CD, condidence: 0.8
-F --> D, condidence: 1
+There are 11 strongest association rules
+Condidence = 0.75  A --> CDF
+Condidence = 1     A --> DF
+Condidence = 1     C --> D
+Condidence = 0.8   C --> DF
+Condidence = 0.75  CF --> AD
+Condidence = 0.833 D --> C
+Condidence = 0.833 D --> F
+Condidence = 1     E --> CD
+Condidence = 0.8   F --> AD
+Condidence = 0.8   F --> CD
+Condidence = 1     F --> D

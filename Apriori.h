@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <string>
+#include <iomanip>
 #include <algorithm>
 using namespace std;
 
@@ -26,17 +27,17 @@ public:
 	void inputTransactions(const string &fileName);   // 读入数据到m_transactions中
 	void findAllFrequentItemSets();                   // 找到所有的频繁项     
 	void findStrongestAssociateRules();               // 找到所有的关联规则
-	void printRules(const string &fileName);
+	void printRules(const string &fileName);          // 打印所有的关联规则
 
 private:
-	void findFrequentOneItemSets();
+	void findFrequentOneItemSets();                   // 从原始的 transaction 里面，找到频繁的 one-item set
 	void findFrequentItemsFromCandidate(const vector<string>& candidateKItemSets); // A frequent item is a item with sufficient coverage(support)
-	void removeUnfrequentCandidates(map<string, int>& candidateKItemSetCount);
-	void generateCandidates(vector<string>& candidateItemSets, int k);
-	bool onlyDifferInLastItem(const string& items1, const string& items2);
-	pair<string, int> findRepresentativeSuperSetCount(const pair<string, int> & representativeKItemSet);
-	void findSubSet(string str, unsigned int level, unsigned int prune, vector<string>& subSet);
-	string complementSet(const string & fullSet, const string & left);
+	void removeUnfrequentCandidates(map<string, int>& candidateKItemSetCount);     // 从候选的 item set 里面,删除 support 不足的,从而得到频繁 item set
+	void generateCandidates(vector<string>& candidateItemSets, int k);             // 产生候选的 item set
+	bool onlyDifferInLastItem(const string& items1, const string& items2);         // 两个排好序的 item set 只有最后一个 item 不同
+	pair<string, int> findRepresentativeSuperSetCount(const pair<string, int> & representativeKItemSet); // 从 representative item set 里面,找到参数 frequentKItemSet 的超集
+	void findSubSet(string str, unsigned int level, unsigned int prune, vector<string>& subSet);         // 从大小为 level 的 set 里面，找到所有大小为 prune 的子集
+	string complementSet(const string & fullSet, const string & left);             // 找到 left 的互补集合
 
 private:
 	double m_minSupportRatio;                    // 最小支持度
