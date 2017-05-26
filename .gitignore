@@ -2,6 +2,8 @@ Debug/
 
 Release/
 
+transaction/
+
 Apriori.vcxproj
 
 Apriori.vcxproj.filters

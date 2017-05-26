@@ -96,6 +96,7 @@ void Apriori::findAllFrequentItemSets()
 */
 void Apriori::findStrongestAssociateRules()
 {
+	m_representativeItemSetCount.clear();
 	// Find the representative K-item sets and their counts
 	for (size_t i = m_frequentKItemSetCount.size() - 2; i > 1; --i)  // [0] 和 [size()-1] 是空元素，[1] 是 one-item set 不能形成rule
 	{
@@ -173,6 +174,7 @@ void Apriori::findStrongestAssociateRules()
 void Apriori::printRules(const string &fileName)
 {
 	ofstream outFile(fileName);
+	outFile << "There are " << m_associationRule.size() << " rules" << endl;
 	cout << "There are " << m_associationRule.size() << " rules" << endl;
 	map<pair<ItemSet, ItemSet>, double>::const_iterator iter = m_associationRule.begin();
 	while (iter != m_associationRule.end())
